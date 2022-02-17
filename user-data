@@ -1,0 +1,62 @@
+#cloud-config
+autoinstall:
+  version: 1
+  early-commands:
+    - systemctl stop ssh
+    - ping -c1 192.168.1.109
+  apt:
+    geoip: true
+    preserve_sources_list: false
+    primary:
+    - arches: [amd64]
+      uri: http://fi.archive.ubuntu.com/ubuntu
+    - arches: [default]
+      uri: http://ports.ubuntu.com/ubuntu-ports
+  identity:
+    hostname: ubuntu
+    password: $6$WxWurjrL097fKCfi$2yrRqBIeoalkIsUH26TirRuwL6sfp5prBxWctpTE9MXJ6XCsMtgR1HrL1h94HB2E47G7TPwwfbxt23RluHklw/ 
+    username: mickeymouse 
+    realname: mickeymouse 
+  locale: C.UTF-8 
+  keyboard:
+    layout: fi
+    toggle: null
+    variant: ''
+  network:
+    ethernets:
+      ens3:
+        dhcp4: true
+        dhcp-identifier: mac
+        nameservers:
+          addresses: [8.8.8.8]
+    version: 2
+  ssh:
+    allow-pw: true
+    install-server: true
+    authorized-keys: 
+    - "ssh-rsa AAAAB3N..."
+  user-data:
+    timezone: Europe/Helsinki
+  storage:
+    swap:
+      size: 0
+    config:
+    - {ptable: gpt, path: /dev/vda, wipe: superblock-recursive, preserve: false, name: '',
+      grub_device: true, type: disk, id: disk-vda}
+    - {device: disk-vda, size: 1048576, flag: bios_grub, number: 1, preserve: false,
+      grub_device: false, type: partition, id: partition-0}
+    - {device: disk-vda, size: 2G, wipe: superblock, flag: '', number: 2,
+      preserve: false, grub_device: false, type: partition, id: partition-1}
+    - {fstype: ext4, volume: partition-1, preserve: false, type: format, id: format-0}
+    - {device: disk-vda, size: -1, wipe: superblock, flag: '', number: 3,
+      preserve: false, grub_device: false, type: partition, id: partition-2}
+    - {fstype: ext4, volume: partition-2, preserve: false, type: format, id: format-1}
+    - {path: /, device: format-1, type: mount, id: mount-1}
+    - {path: /boot, device: format-0, type: mount, id: mount-0}
+  late-commands:
+    - systemctl start ssh
+    - echo 'mickeymouse ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/mickeymouse
+  error-commands:
+    - tar c /var/log/installer | nc 192.168.1.109 20000
+  packages:
+    - openssh-server
